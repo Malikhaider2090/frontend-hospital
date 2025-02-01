@@ -99,7 +99,7 @@ export const DoctorForm = ({ doctorId }: { doctorId?: string }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-md">
+    <form onSubmit={handleSubmit} className="w-4/6 p-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-white text-center mb-4">{doctorId ? "Edit Doctor" : "Add Doctor"}</h2>
       <div className="mb-4">
         <label className="block text-white text-sm font-bold mb-2">First Name</label>

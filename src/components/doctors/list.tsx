@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NoSSR from '../NoSSR'
+import ConfirmationDialog from '../confirmation-dialog'
 
 interface Doctor {
   id: number;
@@ -22,6 +23,8 @@ export default function DoctorsList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [doctorToDelete, setDoctorToDelete] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -104,7 +107,41 @@ export default function DoctorsList() {
   };
 
   const handleEdit = (doctor: Doctor) => {
-    router.push(`/doctors/update/${doctor.id}`);
+    router.push(`/doctors/${doctor.id}`);
+  };
+
+  const updateDoctor = async (id: number, updatedData: Partial<Doctor>) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/doctors/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setDoctors(doctors.map(doctor => (doctor.id === id ? data : doctor)));
+    } catch (error) {
+      console.error('Error updating doctor:', error);
+    }
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setDoctorToDelete(id);
+    setIsDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (doctorToDelete !== null) {
+      await deleteDoctor(doctorToDelete);
+      setDoctorToDelete(null);
+      setIsDialogOpen(false);
+    }
   };
 
   return (
@@ -138,7 +175,7 @@ export default function DoctorsList() {
               </svg>
             </div>
             <button 
-              onClick={() => router.push('/doctors/new')}
+              onClick={() => router.push('/doctors/add')}
               className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg
                         hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all
                         duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
@@ -206,7 +243,7 @@ export default function DoctorsList() {
                       Edit
                     </button>
                     <button
-                      onClick={() => deleteDoctor(doctor.id)}
+                      onClick={() => handleDeleteClick(doctor.id)}
                       className="inline-flex items-center px-3 py-1.5 border border-red-500 text-red-500
                                rounded-md hover:bg-red-50 transition-colors duration-200 gap-1"
                     >
@@ -236,6 +273,13 @@ export default function DoctorsList() {
           )}
         </div>
       </div>
+
+      <ConfirmationDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onConfirm={confirmDelete}
+        message="Are you sure you want to delete this doctor?"
+      />
     </NoSSR>
   )
 }
