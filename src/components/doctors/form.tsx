@@ -45,8 +45,11 @@ export const DoctorForm = ({ doctorId }: { doctorId?: string }) => {
             console.error("Error fetching doctor:", await response.text());
             throw new Error("Failed to fetch doctor");
           }
-          const data = await response.json();
-          setFormData(data);
+          const {id, category, ...data} = await response.json();
+          setFormData({
+            ...data,
+            categoryId: category.id
+          });
         } catch (error) {
           console.error("Error fetching doctor:", error);
         }
@@ -75,21 +78,43 @@ export const DoctorForm = ({ doctorId }: { doctorId?: string }) => {
         throw new Error("Invalid category selected.");
       }
 
-      const url = "http://localhost:5000/api/doctors"; // URL for creating a new doctor
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      //  // URL for creating a new doctor
+
+      let response;
+      let url;
+
+      if(doctorId){
+        console.log('Update Doctor', formData)
+        url = `http://localhost:5000/api/doctors/${doctorId}`
+        const {id, ...updateData} = formData
+        response = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...updateData,
+          }),
+        });
+      } else {
+        console.log('Create Doctor')
+        url = "http://localhost:5000/api/doctors"
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+      }
+      
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create doctor");
+        throw new Error(errorData.error || "Failed");
       }
 
-      router.push("/"); // Redirect after successful creation
+      router.push("/doctors"); // Redirect after successful creation
     } catch (error) {
       console.error("Error saving doctor:", error);
       alert(error instanceof Error ? error.message : "Failed to save doctor");
@@ -147,19 +172,26 @@ export const DoctorForm = ({ doctorId }: { doctorId?: string }) => {
       </div>
       <div className="mb-4">
         <label className="block text-white text-sm font-bold mb-2">Category</label>
-        <select
-          name="categoryId"
-          value={formData.categoryId}
-          onChange={handleChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        >
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            name="categoryId"
+            value={formData.categoryId}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          >
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 10l5 5 5-5H7z" />
+            </svg>
+          </div>
+        </div>
       </div>
       <div className="mb-4">
         <label className="block text-white text-sm font-bold mb-2">Bio</label>
