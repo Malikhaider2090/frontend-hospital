@@ -10,7 +10,7 @@ interface Patient {
   email: string;
   phoneNumber: string;
   dateOfBirth: string;
-  bio: string;
+  address: string;
 }
 
 export const PatientForm = ({ patientId }: { patientId?: string }) => {
@@ -21,7 +21,7 @@ export const PatientForm = ({ patientId }: { patientId?: string }) => {
     email: "",
     phoneNumber: "",
     dateOfBirth: "",
-    bio: "",
+    address: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -35,10 +35,17 @@ export const PatientForm = ({ patientId }: { patientId?: string }) => {
           const response = await fetch(`http://localhost:5000/api/patients/${patientId}`);
           if (!response.ok) {
             console.error("Error fetching patient:", await response.text());
-            throw new Error("Failed to fetch patient");
+            throw new Error("Failed to fetch patient data");
           }
           const data = await response.json();
-          setFormData(data);
+          
+          // Ensure the dateOfBirth is in the correct format
+          const formattedData = {
+            ...data,
+            dateOfBirth: data.dateOfBirth.split('T')[0], // Assuming dateOfBirth is in ISO format
+          };
+
+          setFormData(formattedData);
         } catch (error) {
           console.error("Error fetching patient:", error);
         } finally {
@@ -148,24 +155,25 @@ export const PatientForm = ({ patientId }: { patientId?: string }) => {
         />
       </div>
       <div className="mb-4">
-        <label className="block text-white text-sm font-bold mb-2">Date of Birth</label>
-        <input
-          type="date"
-          name="dateOfBirth"
-          value={formData.dateOfBirth}
-          onChange={handleChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          required
-        />
-      </div>
+  <label className="block text-white text-sm font-bold mb-2">Date of Birth</label>
+  <input
+    type="date"
+    name="dateOfBirth"
+    value={formData.dateOfBirth} // This should be in YYYY-MM-DD format
+    onChange={handleChange}
+    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+    required
+  />
+</div>
       <div className="mb-4">
-        <label className="block text-white text-sm font-bold mb-2">Bio</label>
+        <label className="block text-white text-sm font-bold mb-2">Address</label>
         <textarea
-          name="bio"
-          value={formData.bio}
+          name="address"
+          value={formData.address}
           onChange={handleChange}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          rows={4}
+          rows={3}
+          required
         />
       </div>
       <button
